@@ -33,9 +33,9 @@ def subir_a_drive(ruta_pdf, nombre_pdf):
 
 def geodesic_point_buffer(lat, lon, km):
     proj_wgs84 = pyproj.CRS("EPSG:4326")
-    proj_aeqd = pyproj.Proj(proj='aeqd', lat_0=lat, lon_0=lon)
-    project = pyproj.Transformer.from_proj(proj_wgs84, proj_aeqd, always_xy=True).transform
-    project_back = pyproj.Transformer.from_proj(proj_aeqd, proj_wgs84, always_xy=True).transform
+    proj_aeqd = pyproj.CRS.from_proj4(f"+proj=aeqd +lat_0={lat} +lon_0={lon} +units=m +no_defs")
+    project = pyproj.Transformer.from_crs(proj_wgs84, proj_aeqd, always_xy=True).transform
+    project_back = pyproj.Transformer.from_crs(proj_aeqd, proj_wgs84, always_xy=True).transform
     buffer = transform(project, Point(lon, lat)).buffer(km * 1000)
     return transform(project_back, buffer), proj_aeqd
 
@@ -74,19 +74,21 @@ def generar_mapa():
         gdf_limítrofes = gdf_intersectan[~gdf_intersectan["incluido"]]
 
         # Proyección a métrico para que se vea como círculo
-        gdf_zoom = gdf_continental.to_crs(proj_aeqd.srs)
-        gdf_incluidos_proj = gdf_incluidos.to_crs(proj_aeqd.srs)
-        gdf_limítrofes_proj = gdf_limítrofes.to_crs(proj_aeqd.srs)
-        punto_central_proj = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd.srs, always_xy=True).transform, punto_central)
-        circle_proj = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd.srs, always_xy=True).transform, circle)
+        gdf_continental_proj = gdf_continental.to_crs(proj_aeqd)
+        gdf_incluidos_proj_pg1 = gdf_incluidos.to_crs(proj_aeqd)
+        gdf_incluidos_proj_pg2 = gdf_incluidos.to_crs(proj_aeqd)
+        gdf_limítrofes_proj = gdf_limítrofes.to_crs(proj_aeqd)
+        punto_central_proj = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd, always_xy=True).transform, punto_central)
+        circle_proj_pg1 = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd, always_xy=True).transform, circle)
+        circle_proj_pg2 = circle_proj_pg1
 
         with PdfPages(output_path) as pdf:
             # Página 1
             fig1, (ax_mapa, ax_lista) = plt.subplots(1, 2, figsize=(11.69, 8.27), gridspec_kw={'width_ratios': [2, 1]})
-            gdf_continental.plot(ax=ax_mapa, edgecolor="black", facecolor="none", linewidth=0.5)
-            gdf_incluidos.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
-            gpd.GeoSeries([circle], crs="EPSG:4326").boundary.plot(ax=ax_mapa, color="blue", linewidth=1)
-            ax_mapa.plot(punto_central.x, punto_central.y, "ro", markersize=3)
+            gdf_continental_proj.plot(ax=ax_mapa, edgecolor="black", facecolor="none", linewidth=0.5)
+            gdf_incluidos_proj_pg1.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
+            gpd.GeoSeries([circle_proj_pg1]).boundary.plot(ax=ax_mapa, color="blue", linewidth=1)
+            ax_mapa.plot(punto_central_proj.x, punto_central_proj.y, "ro", markersize=3)
             ax_mapa.set_aspect('equal')
             ax_mapa.axis("off")
             ax_mapa.set_title("Mapa general de Argentina", fontsize=10)
@@ -99,7 +101,7 @@ def generar_mapa():
                     ax_lista.text(0.05, y, "…", fontsize=7, ha="left", va="top")
                     break
                 ax_lista.text(0.05, y, f"• {dpto}", fontsize=6.5, ha="left", va="top")
-            plt.tight_layout()
+            fig1.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
             plt.suptitle(f"Análisis geográfico desde {localidad}", fontsize=13, y=1.02, fontweight="bold")
             pdf.savefig(fig1)
             plt.close(fig1)
@@ -107,18 +109,18 @@ def generar_mapa():
             # Página 2
             fig2, ax_zoom = plt.subplots(figsize=(11.69, 8.27))
             gdf_limítrofes_proj.plot(ax=ax_zoom, facecolor="#DDDDDD", edgecolor="black", linewidth=0.4)
-            gdf_incluidos_proj.plot(ax=ax_zoom, facecolor=color_deseado, edgecolor="black", linewidth=0.6)
-            gpd.GeoSeries([circle_proj]).boundary.plot(ax=ax_zoom, color="blue", linewidth=1)
+            gdf_incluidos_proj_pg2.plot(ax=ax_zoom, facecolor=color_deseado, edgecolor="black", linewidth=0.6)
+            gpd.GeoSeries([circle_proj_pg2]).boundary.plot(ax=ax_zoom, color="blue", linewidth=1)
             ax_zoom.plot(punto_central_proj.x, punto_central_proj.y, marker='o', markersize=5,
                          markerfacecolor='red', markeredgewidth=1, markeredgecolor='white')
-            for idx, row in gdf_incluidos_proj.iterrows():
+            for idx, row in gdf_incluidos_proj_pg2.iterrows():
                 ax_zoom.text(row.geometry.centroid.x, row.geometry.centroid.y, row["departamento"], fontsize=6.5, ha="center", va="center", color="black")
             for idx, row in gdf_limítrofes_proj.iterrows():
                 ax_zoom.text(row.geometry.centroid.x, row.geometry.centroid.y, row["departamento"], fontsize=5.5, ha="center", va="center", color="#666666")
             ax_zoom.set_aspect('equal')
             ax_zoom.axis("off")
             ax_zoom.set_title(f"Zona ampliada desde {localidad}", fontsize=13)
-            plt.tight_layout()
+            fig2.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
             pdf.savefig(fig2)
             plt.close(fig2)
 
