@@ -38,7 +38,7 @@ def subir_a_drive(ruta_pdf, nombre_pdf):
 
 def geodesic_point_buffer(lat, lon, km):
     proj_wgs84 = pyproj.CRS("EPSG:4326")
-    proj_aeqd = pyproj.CRS.from_proj4(f"+proj=aeqd +lat_0={lat} +lon_0={lon} +units=m +no_defs")
+    proj_aeqd = pyproj.CRS.from_proj4(f"+proj=aeqd +lat_0={lat} +lon_0={lon} +units=m +ellps=WGS84 +no_defs")
     project = pyproj.Transformer.from_crs(proj_wgs84, proj_aeqd, always_xy=True).transform
     project_back = pyproj.Transformer.from_crs(proj_aeqd, proj_wgs84, always_xy=True).transform
     buffer = transform(project, Point(lon, lat)).buffer(km * 1000)
