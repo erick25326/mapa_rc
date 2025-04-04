@@ -119,7 +119,7 @@ def generar_mapa():
             cols = 3
             max_per_col = int(len(incluidos) / cols) + 1
             for col in range(cols):
-                x_pos = 0.05 + col * 0.3
+                x_pos = 0.02 + col * 0.31
                 for i in range(max_per_col):
                     idx = col * max_per_col + i
                     if idx >= len(incluidos):
@@ -128,7 +128,7 @@ def generar_mapa():
                     nombre = incluidos[idx]
                     if len(nombre) > 25:
                         nombre = "\n".join([nombre[j:j+25] for j in range(0, len(nombre), 25)])
-                    ax_lista.text(x_pos, y, f"• {nombre}", fontsize=6.5, ha="left", va="top")
+                    ax_lista.text(x_pos, y, f"• {nombre}", fontsize=5.8, ha="left", va="top")
             fig1.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
             pdf.savefig(fig1)
             plt.close(fig1)
