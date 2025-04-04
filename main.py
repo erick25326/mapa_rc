@@ -83,7 +83,7 @@ def generar_mapa():
         circle_proj_pg2 = circle_proj_pg1
 
         with PdfPages(output_path) as pdf:
-            # Página 1
+            print("Generando PDF en:", output_path)
             fig1, (ax_mapa, ax_lista) = plt.subplots(1, 2, figsize=(11.69, 8.27), gridspec_kw={'width_ratios': [2, 1]})
             gdf_continental_proj.plot(ax=ax_mapa, edgecolor="black", facecolor="none", linewidth=0.5)
             gdf_incluidos_proj_pg1.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
@@ -111,7 +111,6 @@ def generar_mapa():
             pdf.savefig(fig1)
             plt.close(fig1)
 
-            # Página 2
             fig2, ax_zoom = plt.subplots(figsize=(11.69, 8.27))
             gdf_limítrofes_proj.plot(ax=ax_zoom, facecolor="#DDDDDD", edgecolor="black", linewidth=0.4)
             gdf_incluidos_proj_pg2.plot(ax=ax_zoom, facecolor=color_deseado, edgecolor="black", linewidth=0.6)
@@ -135,10 +134,14 @@ def generar_mapa():
             pdf.savefig(fig2)
             plt.close(fig2)
 
+        assert os.path.exists(output_path), f"No se generó el PDF en {output_path}"
+        print("PDF generado con éxito. Subiendo a Drive...")
         link_pdf = subir_a_drive(output_path, nombre_final)
+        print("Enlace generado:", link_pdf)
         return jsonify({"url": link_pdf}), 200
 
     except Exception as e:
+        print("ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
