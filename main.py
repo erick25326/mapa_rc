@@ -57,7 +57,10 @@ def generar_mapa():
             gdf = gdf.set_crs("EPSG:4326")
         gdf_continental = gdf.cx[-73:-53, -55:-20]
         gdf_continental = gdf_continental[gdf_continental["provincia"] != "CIUDAD AUTONOMA DE BUENOS AIRES"]
-        gdf_continental["centroid"] = gdf_continental.centroid
+
+        # Corregir cálculo de centroides
+        gdf_centroides_tmp = gdf_continental.to_crs("EPSG:3857")
+        gdf_continental["centroid"] = gdf_centroides_tmp.centroid.to_crs("EPSG:4326")
 
         geolocator = Nominatim(user_agent="geoapi")
         location = geolocator.geocode(f"{localidad}, {provincia}, Argentina")
