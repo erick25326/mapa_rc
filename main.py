@@ -98,23 +98,18 @@ def generar_mapa():
         gdf_intersectan = gdf_continental[gdf_continental.geometry.intersects(circle)]
         gdf_limítrofes = gdf_intersectan[~gdf_intersectan["incluido"]]
 
-        gdf_continental_proj = gdf_continental.to_crs(proj_aeqd)
-        gdf_incluidos_proj_pg1 = gdf_incluidos.to_crs(proj_aeqd)
-        gdf_incluidos_proj_pg2 = gdf_incluidos.to_crs(proj_aeqd)
-        gdf_limítrofes_proj = gdf_limítrofes.to_crs(proj_aeqd)
-        punto_central_proj = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd, always_xy=True).transform, punto_central)
-        circle_proj_pg2 = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd, always_xy=True).transform, circle)
+        gdf_continental_proj = gdf_continental.to_crs("EPSG:3857")
+        gdf_incluidos_proj_pg1 = gdf_incluidos.to_crs("EPSG:3857")
+        gdf_incluidos_proj_pg2 = gdf_incluidos.to_crs("EPSG:3857")
+        gdf_limítrofes_proj = gdf_limítrofes.to_crs("EPSG:3857")
+        punto_central_proj = transform(pyproj.Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True).transform, punto_central)
+        circle_proj_pg2 = transform(pyproj.Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True).transform, circle)
 
         with PdfPages(output_path) as pdf:
             fig1, (ax_mapa, ax_lista) = plt.subplots(1, 2, figsize=(11.69, 8.27), gridspec_kw={'width_ratios': [2, 1]})
             gdf_continental_proj.plot(ax=ax_mapa, edgecolor="black", facecolor="none", linewidth=0.5)
             gdf_incluidos_proj_pg1.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
             ax_mapa.plot(punto_central_proj.x, punto_central_proj.y, "ro", markersize=3)
-            minx, miny, maxx, maxy = circle_proj_pg2.bounds
-            width = max(maxx - minx, maxy - miny)
-            cx, cy = punto_central_proj.x, punto_central_proj.y
-            ax_mapa.set_xlim(cx - width / 1.8, cx + width / 1.8)
-            ax_mapa.set_ylim(cy - width / 1.8, cy + width / 1.8)
             ax_mapa.set_aspect('equal')
             ax_mapa.axis("off")
             ax_mapa.set_title("Mapa general de Argentina", fontsize=10)
@@ -138,7 +133,7 @@ def generar_mapa():
             fig2, ax_zoom = plt.subplots(figsize=(11.69, 8.27))
             gdf_limítrofes_proj.plot(ax=ax_zoom, facecolor="#DDDDDD", edgecolor="black", linewidth=0.4)
             gdf_incluidos_proj_pg2.plot(ax=ax_zoom, facecolor=color_deseado, edgecolor="black", linewidth=0.6)
-            gpd.GeoSeries([circle_proj_pg2]).boundary.plot(ax=ax_zoom, color="blue", linewidth=1)
+            gpd.GeoSeries([circle_proj_pg2], crs="EPSG:3857").boundary.plot(ax=ax_zoom, color="blue", linewidth=1)
             ax_zoom.plot(punto_central_proj.x, punto_central_proj.y, marker='o', markersize=5,
                          markerfacecolor='red', markeredgewidth=1, markeredgecolor='white')
             for idx, row in gdf_incluidos_proj_pg2.iterrows():
