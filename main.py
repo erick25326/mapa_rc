@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # 🔐 Ruta a las credenciales y carpeta de destino
 SERVICE_ACCOUNT_FILE = 'credenciales.json'
-FOLDER_ID = 'TU_FOLDER_ID_AQUI'  # Reemplazar con tu ID real
+FOLDER_ID = '1OsjOeCQn0vM_HWoaDGi6WhJdBaoAIzWT'  # Reemplazar con tu ID real
 
 def subir_a_drive(ruta_pdf, nombre_pdf):
     creds = service_account.Credentials.from_service_account_file(
