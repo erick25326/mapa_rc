@@ -63,7 +63,6 @@ def generar_mapa():
         gdf_continental = gdf.cx[-73:-53, -55:-20]
         gdf_continental = gdf_continental[gdf_continental["provincia"] != "CIUDAD AUTONOMA DE BUENOS AIRES"]
 
-        # Corregir cálculo de centroides
         gdf_centroides_tmp = gdf_continental.to_crs("EPSG:3857")
         gdf_continental["centroid"] = gdf_centroides_tmp.centroid.to_crs("EPSG:4326")
 
@@ -81,7 +80,6 @@ def generar_mapa():
         gdf_intersectan = gdf_continental[gdf_continental.geometry.intersects(circle)]
         gdf_limítrofes = gdf_intersectan[~gdf_intersectan["incluido"]]
 
-        # Proyección a métrico para que se vea como círculo
         gdf_continental_proj = gdf_continental.to_crs(proj_aeqd)
         gdf_incluidos_proj_pg1 = gdf_incluidos.to_crs(proj_aeqd)
         gdf_incluidos_proj_pg2 = gdf_incluidos.to_crs(proj_aeqd)
@@ -91,7 +89,7 @@ def generar_mapa():
         circle_proj_pg2 = circle_proj_pg1
 
         with PdfPages(output_path) as pdf:
-            print("Generando PDF en:", output_path)
+            print("Generando página 1...")
             fig1, (ax_mapa, ax_lista) = plt.subplots(1, 2, figsize=(11.69, 8.27), gridspec_kw={'width_ratios': [2, 1]})
             gdf_continental_proj.plot(ax=ax_mapa, edgecolor="black", facecolor="none", linewidth=0.5)
             gdf_incluidos_proj_pg1.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
@@ -115,10 +113,11 @@ def generar_mapa():
                     break
                 ax_lista.text(0.05, y, f"• {dpto}", fontsize=6.5, ha="left", va="top")
             fig1.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
-            ax_mapa.set_aspect('equal')
             pdf.savefig(fig1)
             plt.close(fig1)
+            print("Página 1 guardada")
 
+            print("Generando página 2...")
             fig2, ax_zoom = plt.subplots(figsize=(11.69, 8.27))
             gdf_limítrofes_proj.plot(ax=ax_zoom, facecolor="#DDDDDD", edgecolor="black", linewidth=0.4)
             gdf_incluidos_proj_pg2.plot(ax=ax_zoom, facecolor=color_deseado, edgecolor="black", linewidth=0.6)
@@ -138,16 +137,17 @@ def generar_mapa():
             ax_zoom.axis("off")
             ax_zoom.set_title(f"Zona ampliada desde {localidad}", fontsize=13)
             fig2.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
-            ax_zoom.set_aspect('equal')
             pdf.savefig(fig2)
             plt.close(fig2)
+            print("Página 2 guardada")
+
+        if not os.path.exists(output_path):
+            raise FileNotFoundError(f"No se generó el PDF en {output_path}")
 
         print("Ruta PDF:", output_path)
         print("Nombre PDF:", nombre_final)
-        print("Existe el archivo?", os.path.exists(output_path))
-        print("Tamaño del archivo:", os.path.getsize(output_path) if os.path.exists(output_path) else "No existe")
+        print("Tamaño del archivo:", os.path.getsize(output_path))
 
-        assert os.path.exists(output_path), f"No se generó el PDF en {output_path}"
         print("PDF generado con éxito. Subiendo a Drive...")
         link_pdf = subir_a_drive(output_path, nombre_final)
         print("Enlace generado:", link_pdf)
