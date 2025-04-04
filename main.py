@@ -89,6 +89,11 @@ def generar_mapa():
             gdf_incluidos_proj_pg1.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
             gpd.GeoSeries([circle_proj_pg1]).boundary.plot(ax=ax_mapa, color="blue", linewidth=1)
             ax_mapa.plot(punto_central_proj.x, punto_central_proj.y, "ro", markersize=3)
+            minx, miny, maxx, maxy = circle_proj_pg1.bounds
+            width = max(maxx - minx, maxy - miny)
+            cx, cy = punto_central_proj.x, punto_central_proj.y
+            ax_mapa.set_xlim(cx - width / 1.8, cx + width / 1.8)
+            ax_mapa.set_ylim(cy - width / 1.8, cy + width / 1.8)
             ax_mapa.set_aspect('equal')
             ax_mapa.axis("off")
             ax_mapa.set_title("Mapa general de Argentina", fontsize=10)
@@ -102,7 +107,7 @@ def generar_mapa():
                     break
                 ax_lista.text(0.05, y, f"• {dpto}", fontsize=6.5, ha="left", va="top")
             fig1.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
-            plt.suptitle(f"Análisis geográfico desde {localidad}", fontsize=13, y=1.02, fontweight="bold")
+            ax_mapa.set_aspect('equal')
             pdf.savefig(fig1)
             plt.close(fig1)
 
@@ -117,10 +122,16 @@ def generar_mapa():
                 ax_zoom.text(row.geometry.centroid.x, row.geometry.centroid.y, row["departamento"], fontsize=6.5, ha="center", va="center", color="black")
             for idx, row in gdf_limítrofes_proj.iterrows():
                 ax_zoom.text(row.geometry.centroid.x, row.geometry.centroid.y, row["departamento"], fontsize=5.5, ha="center", va="center", color="#666666")
+            minx, miny, maxx, maxy = circle_proj_pg2.bounds
+            width = max(maxx - minx, maxy - miny)
+            cx, cy = punto_central_proj.x, punto_central_proj.y
+            ax_zoom.set_xlim(cx - width / 1.8, cx + width / 1.8)
+            ax_zoom.set_ylim(cy - width / 1.8, cy + width / 1.8)
             ax_zoom.set_aspect('equal')
             ax_zoom.axis("off")
             ax_zoom.set_title(f"Zona ampliada desde {localidad}", fontsize=13)
             fig2.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
+            ax_zoom.set_aspect('equal')
             pdf.savefig(fig2)
             plt.close(fig2)
 
