@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Point
 from shapely.ops import transform
 import pyproj
-from geopy.geocoders import Nominatim
-import time
+import requests
 from matplotlib.patches import Rectangle
 from matplotlib.backends.backend_pdf import PdfPages
 from google.oauth2 import service_account
@@ -72,22 +71,27 @@ def generar_mapa():
         gdf_centroides_tmp = gdf_continental.to_crs("EPSG:3857")
         gdf_continental["centroid"] = gdf_centroides_tmp.centroid.to_crs("EPSG:4326")
 
-        geolocator = Nominatim(user_agent="rc-mapas-v1")
-        for intento in range(3):
-            try:
-                location = geolocator.geocode(f"{localidad}, {provincia}, Argentina", timeout=10)
-                if location:
-                    break
-            except Exception as e:
-                print(f"Intento {intento+1}: error geolocalizando - {str(e)}")
-                time.sleep(2)
-        else:
-            return jsonify({"error": "No se pudo obtener la ubicación"}), 500
+        api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
+        if not api_key:
+            return jsonify({"error": "API Key de Google Maps no configurada"}), 500
 
-        punto_central = Point(location.longitude, location.latitude)
+        direccion = f"{localidad}, {provincia}, Argentina"
+        url_geo = f"https://maps.googleapis.com/maps/api/geocode/json?address={direccion}&key={api_key}"
+        response = requests.get(url_geo)
+        if response.status_code != 200:
+            return jsonify({"error": "Error al consultar Google Maps"}), 500
 
-        circle, proj_aeqd = geodesic_point_buffer(location.latitude, location.longitude, radio_km)
-        circle_ampliado, _ = geodesic_point_buffer(location.latitude, location.longitude, radio_km + 20)
+        data_geo = response.json()
+        if data_geo["status"] != "OK":
+            return jsonify({"error": f"No se pudo geolocalizar: {data_geo['status']}"}), 400
+
+        location_data = data_geo["results"][0]["geometry"]["location"]
+        lat = location_data["lat"]
+        lon = location_data["lng"]
+        punto_central = Point(lon, lat)
+
+        circle, proj_aeqd = geodesic_point_buffer(lat, lon, radio_km)
+        circle_ampliado, _ = geodesic_point_buffer(lat, lon, radio_km + 20)
 
         gdf_continental["incluido"] = gdf_continental.centroid.within(circle)
         gdf_incluidos = gdf_continental[gdf_continental["incluido"]]
@@ -103,7 +107,6 @@ def generar_mapa():
         circle_proj_pg2 = circle_proj_pg1
 
         with PdfPages(output_path) as pdf:
-            print("Generando página 1...")
             fig1, (ax_mapa, ax_lista) = plt.subplots(1, 2, figsize=(11.69, 8.27), gridspec_kw={'width_ratios': [2, 1]})
             gdf_continental_proj.plot(ax=ax_mapa, edgecolor="black", facecolor="none", linewidth=0.5)
             gdf_incluidos_proj_pg1.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
@@ -129,9 +132,7 @@ def generar_mapa():
             fig1.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
             pdf.savefig(fig1)
             plt.close(fig1)
-            print("Página 1 guardada")
 
-            print("Generando página 2...")
             fig2, ax_zoom = plt.subplots(figsize=(11.69, 8.27))
             gdf_limítrofes_proj.plot(ax=ax_zoom, facecolor="#DDDDDD", edgecolor="black", linewidth=0.4)
             gdf_incluidos_proj_pg2.plot(ax=ax_zoom, facecolor=color_deseado, edgecolor="black", linewidth=0.6)
@@ -153,18 +154,11 @@ def generar_mapa():
             fig2.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
             pdf.savefig(fig2)
             plt.close(fig2)
-            print("Página 2 guardada")
 
         if not os.path.exists(output_path):
             raise FileNotFoundError(f"No se generó el PDF en {output_path}")
 
-        print("Ruta PDF:", output_path)
-        print("Nombre PDF:", nombre_final)
-        print("Tamaño del archivo:", os.path.getsize(output_path))
-
-        print("PDF generado con éxito. Subiendo a Drive...")
         link_pdf = subir_a_drive(output_path, nombre_final)
-        print("Enlace generado:", link_pdf)
         return jsonify({"url": link_pdf}), 200
 
     except Exception as e:
