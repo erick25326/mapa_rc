@@ -1,0 +1,6 @@
+flask
+geopandas
+shapely
+matplotlib
+pyproj
+geopy
