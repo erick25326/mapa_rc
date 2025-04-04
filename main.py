@@ -103,16 +103,14 @@ def generar_mapa():
         gdf_incluidos_proj_pg2 = gdf_incluidos.to_crs(proj_aeqd)
         gdf_limítrofes_proj = gdf_limítrofes.to_crs(proj_aeqd)
         punto_central_proj = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd, always_xy=True).transform, punto_central)
-        circle_proj_pg1 = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd, always_xy=True).transform, circle)
-        circle_proj_pg2 = circle_proj_pg1
+        circle_proj_pg2 = transform(pyproj.Transformer.from_crs("EPSG:4326", proj_aeqd, always_xy=True).transform, circle)
 
         with PdfPages(output_path) as pdf:
             fig1, (ax_mapa, ax_lista) = plt.subplots(1, 2, figsize=(11.69, 8.27), gridspec_kw={'width_ratios': [2, 1]})
             gdf_continental_proj.plot(ax=ax_mapa, edgecolor="black", facecolor="none", linewidth=0.5)
             gdf_incluidos_proj_pg1.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
-            gpd.GeoSeries([circle_proj_pg1]).boundary.plot(ax=ax_mapa, color="blue", linewidth=1)
             ax_mapa.plot(punto_central_proj.x, punto_central_proj.y, "ro", markersize=3)
-            minx, miny, maxx, maxy = circle_proj_pg1.bounds
+            minx, miny, maxx, maxy = circle_proj_pg2.bounds
             width = max(maxx - minx, maxy - miny)
             cx, cy = punto_central_proj.x, punto_central_proj.y
             ax_mapa.set_xlim(cx - width / 1.8, cx + width / 1.8)
@@ -123,12 +121,16 @@ def generar_mapa():
             ax_lista.axis("off")
             ax_lista.text(0.5, 0.95, "Departamentos incluidos", ha="center", va="top", fontsize=9, fontweight='bold')
             incluidos = gdf_incluidos["departamento"].sort_values().tolist()
-            for i, dpto in enumerate(incluidos):
-                y = 0.90 - i * 0.03
-                if y < 0.05:
-                    ax_lista.text(0.05, y, "…", fontsize=7, ha="left", va="top")
-                    break
-                ax_lista.text(0.05, y, f"• {dpto}", fontsize=6.5, ha="left", va="top")
+            cols = 3
+            max_per_col = int(len(incluidos) / cols) + 1
+            for col in range(cols):
+                x_pos = 0.05 + col * 0.3
+                for i in range(max_per_col):
+                    idx = col * max_per_col + i
+                    if idx >= len(incluidos):
+                        break
+                    y = 0.90 - i * 0.03
+                    ax_lista.text(x_pos, y, f"• {incluidos[idx]}", fontsize=6.5, ha="left", va="top")
             fig1.subplots_adjust(left=0.03, right=0.97, top=0.90, bottom=0.08)
             pdf.savefig(fig1)
             plt.close(fig1)
