@@ -37,7 +37,6 @@ def subir_a_drive(ruta_pdf, nombre_pdf):
         raise
 
 def geodesic_point_buffer(lat, lon, km):
-    # Restablecido a la implementación original que generaba círculos correctamente
     proj_wgs84 = pyproj.CRS("EPSG:4326")
     proj_aeqd = pyproj.CRS.from_proj4(f"+proj=aeqd +lat_0={lat} +lon_0={lon} +units=m +no_defs")
     project = pyproj.Transformer.from_crs(proj_wgs84, proj_aeqd, always_xy=True).transform
@@ -51,9 +50,14 @@ def generar_mapa():
         data = request.get_json()
         localidad = data.get("localidad")
         provincia = data.get("provincia")
-        radio_km = float(data.get("radio"))
+        radio_km = data.get("radio")
         color_deseado = data.get("color")
         nombre = data.get("nombre")
+
+        if not all([localidad, provincia, radio_km, color_deseado, nombre]):
+            return jsonify({"error": "Faltan datos obligatorios"}), 400
+
+        radio_km = float(radio_km)
         fecha = datetime.today().strftime("%Y-%m-%d")
         nombre_final = f"mapa_{nombre}_{fecha}.pdf"
         output_path = f"/tmp/{nombre_final}"
@@ -67,7 +71,7 @@ def generar_mapa():
         gdf_centroides_tmp = gdf_continental.to_crs("EPSG:3857")
         gdf_continental["centroid"] = gdf_centroides_tmp.centroid.to_crs("EPSG:4326")
 
-        geolocator = Nominatim(user_agent="geoapi")
+        geolocator = Nominatim(user_agent="rc-mapas-v1")
         location = geolocator.geocode(f"{localidad}, {provincia}, Argentina")
         if location is None:
             return jsonify({"error": "Localidad no encontrada"}), 400
