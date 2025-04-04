@@ -6,6 +6,7 @@ from shapely.geometry import Point
 from shapely.ops import transform
 import pyproj
 from geopy.geocoders import Nominatim
+import time
 from matplotlib.patches import Rectangle
 from matplotlib.backends.backend_pdf import PdfPages
 from google.oauth2 import service_account
@@ -72,9 +73,17 @@ def generar_mapa():
         gdf_continental["centroid"] = gdf_centroides_tmp.centroid.to_crs("EPSG:4326")
 
         geolocator = Nominatim(user_agent="rc-mapas-v1")
-        location = geolocator.geocode(f"{localidad}, {provincia}, Argentina", timeout=5)
-        if location is None:
-            return jsonify({"error": "Localidad no encontrada"}), 400
+        for intento in range(3):
+            try:
+                location = geolocator.geocode(f"{localidad}, {provincia}, Argentina", timeout=10)
+                if location:
+                    break
+            except Exception as e:
+                print(f"Intento {intento+1}: error geolocalizando - {str(e)}")
+                time.sleep(2)
+        else:
+            return jsonify({"error": "No se pudo obtener la ubicación"}), 500
+
         punto_central = Point(location.longitude, location.latitude)
 
         circle, proj_aeqd = geodesic_point_buffer(location.latitude, location.longitude, radio_km)
