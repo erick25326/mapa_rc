@@ -18,18 +18,23 @@ app = Flask(__name__)
 FOLDER_ID = '1OsjOeCQn0vM_HWoaDGi6WhJdBaoAIzWT'
 
 def subir_a_drive(ruta_pdf, nombre_pdf):
-    json_creds = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
-    creds = service_account.Credentials.from_service_account_info(
-        json_creds,
-        scopes=["https://www.googleapis.com/auth/drive"]
-    )
-    service = build("drive", "v3", credentials=creds)
-    file_metadata = {"name": nombre_pdf, "parents": [FOLDER_ID]}
-    media = MediaFileUpload(ruta_pdf, mimetype="application/pdf")
-    file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
-    file_id = file.get("id")
-    service.permissions().create(fileId=file_id, body={"type": "anyone", "role": "reader"}).execute()
-    return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
+    try:
+        print("Subiendo a Drive...")
+        json_creds = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
+        creds = service_account.Credentials.from_service_account_info(
+            json_creds,
+            scopes=["https://www.googleapis.com/auth/drive"]
+        )
+        service = build("drive", "v3", credentials=creds)
+        file_metadata = {"name": nombre_pdf, "parents": [FOLDER_ID]}
+        media = MediaFileUpload(ruta_pdf, mimetype="application/pdf")
+        file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
+        file_id = file.get("id")
+        service.permissions().create(fileId=file_id, body={"type": "anyone", "role": "reader"}).execute()
+        return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
+    except Exception as e:
+        print("Error en subir_a_drive:", str(e))
+        raise
 
 def geodesic_point_buffer(lat, lon, km):
     proj_wgs84 = pyproj.CRS("EPSG:4326")
@@ -136,6 +141,11 @@ def generar_mapa():
             ax_zoom.set_aspect('equal')
             pdf.savefig(fig2)
             plt.close(fig2)
+
+        print("Ruta PDF:", output_path)
+        print("Nombre PDF:", nombre_final)
+        print("Existe el archivo?", os.path.exists(output_path))
+        print("Tamaño del archivo:", os.path.getsize(output_path) if os.path.exists(output_path) else "No existe")
 
         assert os.path.exists(output_path), f"No se generó el PDF en {output_path}"
         print("PDF generado con éxito. Subiendo a Drive...")
