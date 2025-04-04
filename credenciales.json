@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "api-mapas-455812",
+  "private_key_id": "b92c822e9a7be19dbab90f573149233b08e7c26d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD5lqMXLg6pMY2i\n14gTHdGE54nu6TqfslzElNj6smLrjVT/VlPchUg6lekF1SVP5il6sJTcXKW57zH2\nGWc6BlJX4uC6sco/9Y5AcZAHDoxizBDomBa4mufqN0djmWa4Kd1cLY/zvJqzqYcj\nWfb3uX+IZhI9HFuXVCHoYac+mrzTBTIfYhnGYYZtV+HgMSeN4bhmhD2f+JZjsWF/\n2btJdw4ZM809bOx0075tw7vJLGwjdcd7XFh9NKwFAYNQ7OGa3fIhIwzXDzQlrnnE\nvQEbSk6yq4s1DJssLCzp2VMnAQTL4L1aX/5FH4alR+SvvcvkFeRDMl4SyqtxTy+b\nzAnbDJjlAgMBAAECggEAFuQziiKNyAPaUedYZ38dIoZFTDXKTC+vkCd3bSrjpWdo\nNnu5o6ilHXEhbF5bwTkYGyogmm4e6cT1Up/gLAi8uwB9Nx0BB/O4Jn35RURsKNA+\n9Bj66yyTUmkxMYKLfXRNhVuib9WfuhRgPM75YUgmA8xve3kN3NJ5F6yuils72qiu\nzYRLKIKIaxpJ3lzHnSeGbBFw5Kf6ITIgPvENRwQjxUVOr0KS30XwRtJ9EsVTupPe\nQYkiwYmn42bd1m5sq2GeWmyHN2PJhwTMDPHMe1eQFwo8ejxOpA+LTqygdF2TnSgF\nDU/3f9jnzAXx7OE8LbraRwV7dWTtJkQTgmuIwaSbUwKBgQD80ghBoFAp406RE58u\nART2qkzBRqK/2WtutHiTfCeQvtifLbgbQ9cQMssGQbxm6uugRsyqY2N2U5ctQtT5\nfaarmQbaOqzrZdJUAFMSZNlCjcyUOdjlle3lR1To7ydNiGw/sDl+xk/VylddTxYX\nuz/o34HfZv28Opx6CUZTbbmdIwKBgQD8ujL+uNwI+Oj4TFjvFTOr9CSXe0q+1OEu\n+l8qbOtQO5/UVgZ0w423yaoSUGMvyxu0I5KSI++hC5Eq9nr6+4lUM4Dm/wkuzJve\nmLdMx8YS3mux35sbvKpip+S552lHnmK3CHqUCBM3xor/O411eAe7zumNP8iYczrV\n8qVDnJcmVwKBgQD0feFCJdigSZQnNISRprYxPMvxdW/afFYqvxiD+GMC1a0DcuFC\nbL7EiXpRWKzsEm8/lnhCps7/FSNzv9faVqsh82DvFiM3mkZmudGcTi7U7/BRwAeD\nLxTaz7rLcMvfbPjSNofDk+CM7ZrDP8IrvQe3Gr6r3xuuNjgwxFtgPxJrZQKBgBbR\nRNtkm1EgEACi/ACR/HlQ8KDQm94A4FfaeQ8eiFxVFcgZADo4kan/RiCjK2FcSCMK\ndyhEoFT8811apZ3Vaf+1KrUwX4bfKE9/oEUJYGPBux1zH9DwRr3jhK4YK5Qww57c\n4BxPYlTN0yzaFpp9fM1DECkVkinZdX1ti+g/0hG/AoGAb0LdcbEk5GiSNyOOlltY\nCQ8yV3sDv5r85oQtmD3Zwyp//Lgmxhqaij1sVtL4dUjRYoYYiETV+Q2HW8BCD62o\nETnCfnxkeS+F9fvuyXn3dVcDZ9PSfGrtFAvkkVABVqa+H6IQ2DOLBDWBaMZSdd8I\nVGmQkGHAJhF/Mfz9f3spG3Y=\n-----END PRIVATE KEY-----\n",
+  "client_email": "mapas-api@api-mapas-455812.iam.gserviceaccount.com",
+  "client_id": "116626147678885506755",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/mapas-api%40api-mapas-455812.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
