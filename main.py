@@ -6,7 +6,7 @@ from shapely.geometry import Point
 from shapely.ops import transform
 import pyproj
 from geopy.geocoders import Nominatim
-from matplotlib.patches import Rectangleg
+from matplotlib.patches import Rectangle
 from matplotlib.backends.backend_pdf import PdfPages
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -38,7 +38,7 @@ def subir_a_drive(ruta_pdf, nombre_pdf):
 
 def geodesic_point_buffer(lat, lon, km):
     proj_wgs84 = pyproj.CRS("EPSG:4326")
-    proj_aeqd = pyproj.CRS.from_proj4(f"+proj=aeqd +lat_0={lat} +lon_0={lon} +ellps=WGS84 +units=m +no_defs")
+    proj_aeqd = pyproj.CRS.from_proj4(f"+proj=aeqd +lat_0={lat} +lon_0={lon} +units=m +no_defs")
     project = pyproj.Transformer.from_crs(proj_wgs84, proj_aeqd, always_xy=True).transform
     project_back = pyproj.Transformer.from_crs(proj_aeqd, proj_wgs84, always_xy=True).transform
     buffer = transform(project, Point(lon, lat)).buffer(km * 1000)
@@ -72,7 +72,7 @@ def generar_mapa():
         gdf_continental["centroid"] = gdf_centroides_tmp.centroid.to_crs("EPSG:4326")
 
         geolocator = Nominatim(user_agent="rc-mapas-v1")
-        location = geolocator.geocode(f"{localidad}, {provincia}, Argentina")
+        location = geolocator.geocode(f"{localidad}, {provincia}, Argentina", timeout=5)
         if location is None:
             return jsonify({"error": "Localidad no encontrada"}), 400
         punto_central = Point(location.longitude, location.latitude)
