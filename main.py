@@ -7,8 +7,29 @@ from shapely.ops import transform
 import pyproj
 from geopy.geocoders import Nominatim
 from matplotlib.patches import Rectangle
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 
 app = Flask(__name__)
+
+# 🔐 Ruta a las credenciales y carpeta de destino
+SERVICE_ACCOUNT_FILE = 'credenciales.json'
+FOLDER_ID = 'TU_FOLDER_ID_AQUI'  # Reemplazar con tu ID real
+
+def subir_a_drive(ruta_pdf, nombre_pdf):
+    creds = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE,
+        scopes=["https://www.googleapis.com/auth/drive"]
+    )
+    service = build("drive", "v3", credentials=creds)
+    file_metadata = {"name": nombre_pdf, "parents": [FOLDER_ID]}
+    media = MediaFileUpload(ruta_pdf, mimetype="application/pdf")
+    file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
+    file_id = file.get("id")
+    permission = {"type": "anyone", "role": "reader"}
+    service.permissions().create(fileId=file_id, body=permission).execute()
+    return f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
 
 def geodesic_point_buffer(lat, lon, km):
     proj_wgs84 = pyproj.Proj("epsg:4326")
@@ -32,17 +53,13 @@ def generar_mapa():
         nombre_final = f"mapa_{nombre}_{fecha}.pdf"
         output_path = f"/tmp/{nombre_final}"
 
-        # Cargar TopoJSON (asegurate de tener este archivo en el repo o accesible desde URL)
         gdf = gpd.read_file("departamentos-argentina.topojson")
-
         if gdf.crs is None:
             gdf = gdf.set_crs("EPSG:4326")
-
         gdf_continental = gdf.cx[-73:-53, -55:-20]
         gdf_continental = gdf_continental[gdf_continental["provincia"] != "CIUDAD AUTONOMA DE BUENOS AIRES"]
         gdf_continental["centroid"] = gdf_continental.centroid
 
-        # Geolocalizar localidad
         geolocator = Nominatim(user_agent="geoapi")
         location = geolocator.geocode(f"{localidad}, {provincia}, Argentina")
         if location is None:
@@ -54,8 +71,6 @@ def generar_mapa():
         gdf_incluidos = gdf_continental[gdf_continental["incluido"]]
 
         fig, (ax_mapa, ax_lista, ax_zoom) = plt.subplots(1, 3, figsize=(11.69, 8.27), gridspec_kw={'width_ratios': [3, 1.5, 3]})
-
-        # Mapa general
         gdf_continental.plot(ax=ax_mapa, edgecolor="black", facecolor="none", linewidth=0.5)
         gdf_incluidos.plot(ax=ax_mapa, facecolor=color_deseado, edgecolor="black", linewidth=0.5)
         gpd.GeoSeries([circle], crs="EPSG:4326").boundary.plot(ax=ax_mapa, color="blue", linewidth=1)
@@ -63,7 +78,6 @@ def generar_mapa():
         ax_mapa.axis("off")
         ax_mapa.set_title("Mapa general", fontsize=10)
 
-        # Lista de departamentos
         ax_lista.axis("off")
         ax_lista.text(0.5, 0.95, "Departamentos incluidos", ha="center", va="top", fontsize=9, fontweight='bold')
         incluidos = gdf_incluidos["departamento"].sort_values().tolist()
@@ -76,7 +90,6 @@ def generar_mapa():
                 break
             ax_lista.text(0.05, y, f"• {dpto}", fontsize=6.5, ha="left", va="top")
 
-        # Zona ampliada
         circle_ampliado = geodesic_point_buffer(location.latitude, location.longitude, radio_km + 20)
         gdf_intersectan = gdf_continental[gdf_continental.geometry.intersects(circle)]
         gdf_limítrofes = gdf_intersectan[~gdf_intersectan["incluido"]]
@@ -98,11 +111,13 @@ def generar_mapa():
         plt.tight_layout()
         plt.savefig(output_path, dpi=150, bbox_inches="tight")
 
-        # 🔁 En una versión futura: subir a Drive o Dropbox y devolver URL real
-        return jsonify({"url": f"GENERADO: {nombre_final} (ver en /tmp)"}), 200
+        # 🚀 Subir a Drive y devolver link
+        link_pdf = subir_a_drive(output_path, nombre_final)
+        return jsonify({"url": link_pdf}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+
