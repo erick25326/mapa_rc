@@ -14,14 +14,20 @@ from googleapiclient.http import MediaFileUpload
 app = Flask(__name__)
 
 # 🔐 Ruta a las credenciales y carpeta de destino
-SERVICE_ACCOUNT_FILE = 'credenciales.json'
 FOLDER_ID = '1OsjOeCQn0vM_HWoaDGi6WhJdBaoAIzWT'  # Reemplazar con tu ID real
 
 def subir_a_drive(ruta_pdf, nombre_pdf):
-    creds = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE,
-        scopes=["https://www.googleapis.com/auth/drive"]
+    import os
+    import json
+    
+    json_creds = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
+    
+    creds = service_account.Credentials.from_service_account_info(
+    json_creds,
+    scopes=["https://www.googleapis.com/auth/drive"]
+    
     )
+
     service = build("drive", "v3", credentials=creds)
     file_metadata = {"name": nombre_pdf, "parents": [FOLDER_ID]}
     media = MediaFileUpload(ruta_pdf, mimetype="application/pdf")
